@@ -3,21 +3,9 @@ const Koa = require('koa');
 const Router = require('koa-router');
 const WS = require('ws');
 const koaBody = require('koa-body');
+
 const app = new Koa();
 
-// инициализируем роутер
-const router = new Router();
-
-// инициализируем обработчик входящих сообщений
-app.use(koaBody());
-
-// создадим сервера
-const server = http.createServer(app.callback())
-const wsServer = new WS.Server({ server });
-
-app.use(router.routes()).use(router.allowedMethods());
-
-// зададим базовые настройки политики CORS
 app.use(async (ctx, next) => {
   const origin = ctx.request.get('Origin');
   if (!origin) {
@@ -50,14 +38,22 @@ app.use(async (ctx, next) => {
   }
 });
 
-// создадим массив с именами пользователей для быстрого доступа и регистрации
-const userNames = [];
+app.use(koaBody());
+
+const router = new Router();
+
+const port = process.env.PORT || 7070;
+const server = http.createServer(app.callback())
+const wsServer = new WS.Server({ server });
 
 // "поздороваемся" с браузером
 router.get('/check', async (ctx) => {
   ctx.response.body = 'hello';
   ctx.response.status = 200;
 });
+
+// создадим массив с именами пользователей для быстрого доступа и регистрации
+const userNames = [];
 
 // добавим нового пользователя
 router.post('/users', async (ctx) => {
@@ -73,6 +69,8 @@ router.post('/users', async (ctx) => {
   userNames.push(name);
   ctx.response.status = 204;
 });
+
+app.use(router.routes()).use(router.allowedMethods());
 
 // создадим коллекцию Map для хранения уникальных пар веб-сокет/имя клиента
 const clients = new Map();
@@ -109,6 +107,4 @@ wsServer.on('connection', (ws) => {
   });
 });
 
-// инициализируем прослушивание порта
-const port = process.env.PORT || 7070;
 server.listen(port);
