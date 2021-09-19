@@ -55,6 +55,11 @@ router.get('/check', async (ctx) => {
 // создадим массив с именами пользователей для быстрого доступа и регистрации
 const userNames = [];
 
+router.get('/getAllNames', async (ctx) => {
+  ctx.response.body = JSON.stringify(userNames);
+  ctx.response.status = 200;
+});
+
 // добавим нового пользователя
 router.post('/users', async (ctx) => {
   const name = ctx.request.body.name;
