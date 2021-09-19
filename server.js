@@ -2,31 +2,53 @@ const http = require('http');
 const Koa = require('koa');
 const Router = require('koa-router');
 const WS = require('ws');
-const cors = require('koa2-cors');
 const koaBody = require('koa-body');
 const app = new Koa();
 
-// зададим базовые настройки политики CORS
-app.use(
-  cors({
-    origin: '*',
-    credentials: true,
-    'Access-Control-Allow-Origin': true,
-    allowMethods: ['GET', 'POST'],
-  })
-)
+// инициализируем роутер
+const router = new Router();
 
 // инициализируем обработчик входящих сообщений
 app.use(koaBody());
-
-// инициализируем роутер
-const router = new Router();
 
 // создадим сервера
 const server = http.createServer(app.callback())
 const wsServer = new WS.Server({ server });
 
 app.use(router.routes()).use(router.allowedMethods());
+
+// зададим базовые настройки политики CORS
+app.use(async (ctx, next) => {
+  const origin = ctx.request.get('Origin');
+  if (!origin) {
+    return await next();
+  }
+
+  const headers = { 'Access-Control-Allow-Origin': '*', };
+
+  if (ctx.request.method !== 'OPTIONS') {
+    ctx.response.set({ ...headers });
+    try {
+      return await next();
+    } catch (e) {
+      e.headers = { ...e.headers, ...headers };
+      throw e;
+    }
+  }
+
+  if (ctx.request.get('Access-Control-Request-Method')) {
+    ctx.response.set({
+      ...headers,
+      'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH',
+    });
+
+    if (ctx.request.get('Access-Control-Request-Headers')) {
+      ctx.response.set('Access-Control-Allow-Headers', ctx.request.get('Access-Control-Request-Headers'));
+    }
+
+    ctx.response.status = 204;
+  }
+});
 
 // создадим массив с именами пользователей для быстрого доступа и регистрации
 const userNames = [];
