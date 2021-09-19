@@ -1,6 +1,6 @@
 # Домашнее задание №1 к лекции «EventSource, Websockets»
 
-[Ссылка на Heroku](https://yuriyvyatkin.github.io/ahj-hw-8.1-chat-frontend/)
+[Ссылка на Heroku](https://simple-chat-2021.herokuapp.com/)
 
 ## Чат
 
